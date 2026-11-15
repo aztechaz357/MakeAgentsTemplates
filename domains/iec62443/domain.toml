@@ -1,0 +1,179 @@
+# MakeAgent_001 (IEC 62443-4-1 のプロセスで 4-2 の要件を満たす組込みソフトの開発) の骨組みを再現する定義。
+# 要件マップ、脅威分析、コーディング規約などの分野の知識は含まない (役割のスキルは骨組みで書き出される)。
+# 中身まで再現する手順は docs/design.md の「MakeAgent_001 の再現」。
+
+[domain]
+name = "iec62443"
+title = "IEC 62443 に沿った組込みソフト開発"
+summary = "IEC 62443-4-1 のプロセスで 4-2 の要件を満たす組込みソフトを、要求、設計、テスト設計、実装、テストの順に開発する。"
+triggers = "セキュリティに関わる作業 (認証、認可、通信、暗号、ログ、更新、入力検証、設定)"
+prefix = "sec"
+config_dir = ".sec62443"
+user = "利用者 (設計者兼マネジメント)"
+tracker = "github"
+records_dir = "docs/security"
+trace_columns = ["ID", "上流", "CR", "テスト", "実装", "状態", "issue", "PR"]
+trace_note = "`CR` には対応する要件の ID を、`テスト` と `実装` にはテストの ID と実装の場所を書く。"
+principles = [
+  "規格本文と社内規定の本文を成果物に書き写さない。ID と自分の言葉の要約だけを書く。",
+  "適合を断定しない。「この項目のテストが通った」「未検証」のように根拠で述べる。",
+  "セキュリティ機能を弱める変更は、依頼に明示の承認がない限り行わない。自分の判断で目標のレベルを下げたり要件を対象外にしたりしない。",
+]
+flow_note = "文書の工程では、作成者の項目を受けて test-designer がテストを設計し、テストが書けない項目があれば作成者に戻す。`code` ではテスト仕様が先にあり、coder がそれをテストコードにしてから実装する。"
+escalate = "新しい外部インタフェース、鍵や認証情報、ファーム更新経路、信頼境界をまたぐデータの新設に当たる"
+default_stage = "code"
+
+[[artifacts]]
+id = "REQ"
+name = "製品セキュリティ要求仕様書"
+path = "docs/security/requirements.md"
+[[artifacts]]
+id = "ARC"
+name = "製品セキュリティアーキテクチャ設計書"
+path = "docs/security/architecture.md"
+[[artifacts]]
+id = "FS"
+name = "機能仕様書"
+path = "docs/security/functional-spec.md"
+[[artifacts]]
+id = "SWD"
+name = "ソフトウェア設計書"
+path = "docs/security/software-design.md"
+[[artifacts]]
+id = "UT"
+name = "単体テスト仕様書"
+path = "docs/security/test/ut.md"
+[[artifacts]]
+id = "IT"
+name = "統合テスト仕様書"
+path = "docs/security/test/it.md"
+[[artifacts]]
+id = "ST"
+name = "システム試験仕様書"
+path = "docs/security/test/st.md"
+
+[[roles]]
+name = "req-analyzer"
+label = "要求分析担当"
+task = "要求を分析し、当てはまる要件の選定、脅威分析、要求の抜けの洗い出し、要求仕様書 (REQ) の作成を行う"
+ask = "どの要件が当てはまるか、要求に抜けがないか知りたい"
+skill = "requirements"
+edits = "REQ、トレース表、台帳"
+reviewer = "req-reviewer"
+reviewer_label = "要求レビュー担当"
+reviewer_view = "要件の選定の漏れ、要求の検証可能性、脅威への対応を見る"
+
+[[roles]]
+name = "doc-writer"
+label = "文書作成担当"
+task = "設計文書 (ARC、FS、SWD) を書き、既存コードから文書を逆生成する"
+ask = "仕様書や設計書を書いてほしい"
+skill = "docs"
+never = "コードやテストを書かない。利用者の決定がない設計上の選択は `仮` の案にとどめる。"
+edits = "ARC、FS、SWD、トレース表、台帳"
+reviewer = "doc-reviewer"
+reviewer_label = "文書レビュー担当"
+reviewer_view = "上流との対応とセキュリティ設計の観点で見る"
+
+[[roles]]
+name = "test-designer"
+label = "テスト設計担当"
+task = "テスト仕様 (UT、IT、ST) を、対象の成果物より先に設計する"
+ask = "テストケースを作ってほしい"
+skill = "test-design"
+edits = "UT、IT、ST の仕様、トレース表、台帳"
+reviewer = "test-design-reviewer"
+reviewer_label = "テスト設計レビュー担当"
+reviewer_view = "テストケースの網羅性、技法の使い方、期待結果の判定可能性を見る"
+
+[[roles]]
+name = "coder"
+label = "実装担当"
+task = "テスト仕様をテストコードにし、失敗を確認してから実装する"
+ask = "コードを書いてほしい、直してほしい"
+skill = "coding"
+tools = ["read", "search", "edit", "execute"]
+edits = "コード、テストコード、トレース表、台帳"
+reviewer = "code-reviewer"
+reviewer_label = "コードレビュー担当"
+reviewer_view = "設計との対応、コーディング規約、セキュリティ機能を弱める変更の有無を見る"
+
+[[roles]]
+name = "tester"
+label = "テスト実施担当"
+task = "テストを実装者から独立して実行し、結果と証跡を記録する"
+ask = "テストを実行して結果をまとめてほしい"
+skill = "test-exec"
+tools = ["read", "search", "edit", "execute"]
+edits = "テスト結果、手順書、トレース表、台帳"
+reviewer = "test-reviewer"
+reviewer_label = "テスト結果レビュー担当"
+reviewer_view = "実施の網羅性、証跡、不合格の切り分けを見る"
+
+[[stages]]
+key = "req"
+label = "要求仕様書を作る"
+flow = ["req-analyzer", "test-designer:ST"]
+makes = "REQ、ST"
+[[stages]]
+key = "arch"
+label = "アーキテクチャ設計書を作る"
+flow = ["req-analyzer:standard のみ。脅威分析", "doc-writer:ARC", "test-designer:IT"]
+makes = "ARC、IT"
+review = ["doc-reviewer", "test-design-reviewer"]
+[[stages]]
+key = "spec"
+label = "機能仕様書 (外部仕様書) を作る"
+flow = ["doc-writer:FS", "test-designer:ST、IT"]
+makes = "FS、ST、IT"
+[[stages]]
+key = "design"
+label = "ソフトウェア設計書を作る"
+flow = ["doc-writer:SWD", "test-designer:UT、IT"]
+makes = "SWD、UT、IT"
+[[stages]]
+key = "code"
+label = "テストを先に書いて実装する"
+flow = ["test-designer:UT がないときだけ", "coder", "tester"]
+makes = "コード、テストコード、テスト結果"
+review = ["code-reviewer", "test-reviewer"]
+[[stages]]
+key = "it"
+label = "統合テストを実施する"
+flow = ["test-designer:仕様がないときだけ", "tester"]
+makes = "テスト結果"
+review = ["test-reviewer"]
+[[stages]]
+key = "st"
+label = "システム試験を実施する"
+flow = ["test-designer:仕様がないときだけ", "tester"]
+makes = "テスト結果"
+review = ["test-reviewer"]
+[[stages]]
+key = "reverse"
+label = "既にあるコードから設計書を起こす"
+arg = "<対象のファイル>"
+flow = ["doc-writer:逆生成", "coder:今の振る舞いを固定するテスト", "reconciler"]
+makes = "SWD、FS (後追い)"
+review = ["doc-reviewer"]
+
+[[settings]]
+key = "target_sl"
+value = "2"
+comment = "目標のセキュリティレベル 1〜4"
+[[settings]]
+key = "product"
+value = "inverter"
+comment = "inverter | servo | plc"
+[[settings]]
+key = "coding_standard"
+value = "CERT C"
+[[settings]]
+key = "test_command"
+value = '""'
+comment = "ホスト上の単体テストの実行コマンド"
+
+[support]
+librarian = true
+auditor = true
+redmine = true

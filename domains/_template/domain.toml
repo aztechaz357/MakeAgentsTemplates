@@ -1,0 +1,74 @@
+# 分野の定義の書き方。このフォルダをコピーして名前を変え、中身を書き換える。
+# 検査: python tools/generate.py domains/<名前> --check
+# 1 行の説明 (summary、triggers、task など) には「: 」(コロンと空白) と改行を入れない。
+
+[domain]
+name = "mydomain"            # 入口のスキル名。チャットで /mydomain と打って呼ぶ (半角の小文字、数字、ハイフン)
+title = "○○の仕事"          # 人が読む名前
+summary = "○○を、△△から□□まで進める。"   # 何をする一式か。AGENTS.md の 1 行目と入口の説明になる
+triggers = "○○や△△の相談"   # どんな依頼のときに入口を使うか (「〜を頼まれたら」に続く形)
+
+# ここから下は省ける (書いてあるのが既定の値)
+prefix = "mydomain"          # 役割のスキルの接頭辞。mydomain-base のようになる
+config_dir = ".mydomain"     # 使う場所ごとの設定、固有ルール、学びの記録を置くフォルダ
+user = "利用者"              # 窓口が相手にする人の呼び方
+tracker = "github"           # 作業の単位の置き場所の既定。github | redmine | manual | none (none はチケットを使わず案件名で進める)
+default_mode = "lite"        # lite (作成だけ) | standard (独立レビュー付き)
+records_dir = "docs/mydomain"   # トレース表と未整合台帳の場所。案件ごとに分けるなら "cases/{case}"
+trace_columns = ["ID", "上流", "確認", "状態", "チケット"]   # ID、上流、状態は必須。分野の列 (要件の ID など) を足せる
+trace_note = ""              # 足した列に何を書くかの説明
+principles = []              # この分野で全員が守ること。1 行ずつ、3 つまでを目安に (常に読まれるので短く)
+flow_note = ""               # 工程の順番についての決まり (例: 確認の方法を先に作る)
+escalate = ""                # lite から standard への切替えを提案する条件 (「〜と分かったら」に続く形)
+# default_stage = "make"     # 工程を省いたときの工程。省くと最初の工程
+
+# 成果物の種類。id は項目の ID の頭に付く (DOC-001)。path の {case} はチケットの番号か案件名に置き換わる
+[[artifacts]]
+id = "DOC"
+name = "成果物の名前"
+path = "docs/mydomain/document.md"
+
+# 作成の担当。reviewer を書くと、同じスキルを読む独立レビュー担当も作られる
+[[roles]]
+name = "maker"               # エージェント名 (半角)
+label = "作成担当"           # 日本語名
+task = "○○を作る"           # 何を任せるか (1 行)
+# 省ける項目
+ask = "○○を作ってほしい"    # 逆引き辞典の「やりたいこと」
+skill = "maker"              # 読むスキル (prefix-skill)。省くと name と同じ。本文は skills/<skill>.md に書く
+does = "○○の作成と修正、トレース表の更新"   # 担当の範囲
+never = "△△を書かない。"   # しないこと
+edits = "DOC、トレース表、台帳"   # 編集できるもの (割当て表に出る)
+tools = ["read", "search", "edit"]   # read | search | edit | execute
+reviewer = "reviewer"        # レビュー担当のエージェント名。省くとレビュー担当を作らない
+reviewer_label = "レビュー担当"
+reviewer_view = "○○の立場で読む"   # レビュー担当の立場や観点 (1 行)
+
+# 工程。flow は順に呼ぶ担当。"名前:補足" と書くと表に補足が出る。整合担当 (reconciler) なども書ける
+[[stages]]
+key = "make"                 # コマンドの語。/mydomain make 12
+label = "○○を作る"
+flow = ["maker"]
+# 省ける項目
+makes = "DOC"                # 作るもの (表に出る)
+ask = "○○を作りたい"        # 逆引き辞典の「やりたいこと」
+arg = ""                     # 番号や案件名の代わりに受け取るもの (例: "<対象のファイル>")
+# review = ["reviewer"]      # standard で呼ぶレビュー担当。省くと flow の担当のレビュー担当
+
+# 逆引き辞典に足す行 (任意)
+# [[howto]]
+# want = "○○で困っている"
+# input = "`/mydomain make <案件名>`"
+
+# 使う場所ごとの設定 (project.yml) に足す項目 (任意)
+# [[settings]]
+# key = "audience"
+# value = '""'
+# comment = "説明"
+
+[support]
+reconciler = true            # 整合担当 (常に作られる)
+improver = true              # 改善担当 (常に作られる)
+librarian = false            # 資料管理担当。規定、過去の成果物、参考資料を索引で参照する
+auditor = false              # 監査担当。分野のチェック表で棚卸しする (false でも audit は整合担当が行う)
+redmine = false              # Redmine のチケットを読み書きする道具

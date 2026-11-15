@@ -1,0 +1,156 @@
+# 定型でない、答えのない問題を進めるための一式。
+# 例: 上司や組織を説得する、進め方がおかしいプロジェクトを見直す、業務改善を進める。
+
+[domain]
+name = "solve"
+title = "答えのない問題の解決"
+summary = "定型でない、急に現れる答えのない問題 (上司や組織の説得、進め方がおかしい計画の見直し、業務改善) を、問題の整理、選択肢の比較、提案資料、実行計画の順に進める。"
+triggers = "説得や提案、方針や計画の見直し、業務改善、どう進めればよいか分からない問題の相談"
+tracker = "none"
+records_dir = "cases/{case}"
+case_example = "tool-for-partners"
+trace_columns = ["ID", "上流", "根拠", "確認", "状態", "案件"]
+trace_note = "`根拠` には事実の出どころ (資料、数値、誰の発言か) を、`確認` には誰に何を確かめたかを書く。"
+principles = [
+  "事実、推測、意見を分けて書く。数値と引用には出どころを付け、確かめていないものは「未確認」と書く。",
+  "結論を利用者の望む方向に寄せない。不利な事実と、やめる、続ける、何もしないという選択肢も同じ重さで示す。",
+  "社外秘や個人に関わる情報は、利用者が渡した範囲だけを使う。人を評価する書き方をせず、仕組みと判断の問題として書く。",
+]
+flow_note = "どの工程からでも始められる。資料作りから頼まれた場合も、論点や選択肢の成果物がなければ仮で置いて台帳に残し、あとで `reconcile` で合わせる。"
+escalate = "決める人が部門をまたぐ、費用や契約や情報の持出しに関わる、いま進んでいる計画を止める提案になる"
+
+[[artifacts]]
+id = "SIT"
+name = "状況整理"
+path = "cases/{case}/situation.md"
+[[artifacts]]
+id = "ISS"
+name = "論点"
+path = "cases/{case}/issues.md"
+[[artifacts]]
+id = "OPT"
+name = "選択肢と評価"
+path = "cases/{case}/options.md"
+[[artifacts]]
+id = "ARG"
+name = "説得の筋道"
+path = "cases/{case}/argument.md"
+[[artifacts]]
+id = "DOC"
+name = "提案資料"
+path = "cases/{case}/proposal.md"
+[[artifacts]]
+id = "PLN"
+name = "実行計画"
+path = "cases/{case}/plan.md"
+
+[[roles]]
+name = "framer"
+label = "問題整理担当"
+task = "状況を整理して事実と推測を分け、本当に解くべき論点を決める"
+ask = "何が問題なのかを整理したい。モヤモヤを言葉にしたい"
+skill = "framing"
+does = "状況整理 (SIT) と論点 (ISS) の作成と修正、利用者に確かめる質問の整理、トレース表の更新"
+never = "解決策を決めない。利用者に確かめていない推測を事実として書かない。"
+edits = "SIT、ISS、トレース表、台帳"
+reviewer = "frame-reviewer"
+reviewer_label = "前提レビュー担当"
+reviewer_view = "置かれた前提、抜けている関係者、問いの立て方を疑う立場で読む"
+
+[[roles]]
+name = "strategist"
+label = "選択肢担当"
+task = "選択肢を広げて評価の軸で比べ、推奨と、止める、変える、続けるの判断材料を作る"
+ask = "どんな手があるか、どれがよいか知りたい。いまの進め方を続けるべきか判断したい"
+skill = "options"
+does = "選択肢と評価 (OPT) の作成と修正、トレース表の更新"
+never = "資料の体裁を作らない。推奨を利用者の決定として扱わない。"
+edits = "OPT、トレース表、台帳"
+reviewer = "option-reviewer"
+reviewer_label = "反論担当"
+reviewer_view = "推奨に反対する立場で、弱い根拠、見落とした選択肢、都合のよい評価を突く"
+
+[[roles]]
+name = "writer"
+label = "資料作成担当"
+task = "決める相手に合わせて説得の筋道を組み、提案資料にする"
+ask = "上司や組織を説得する資料を作りたい"
+skill = "proposal"
+does = "説得の筋道 (ARG) と提案資料 (DOC) の作成と修正、トレース表の更新"
+never = "根拠のない数値や事例を書かない。不利な事実を隠さない。選択肢の評価を自分で変えない。"
+edits = "ARG、DOC、トレース表、台帳"
+reviewer = "audience-reviewer"
+reviewer_label = "読み手役レビュー担当"
+reviewer_view = "決める相手 (上司、関係部門) の立場で読み、通らない理由と聞かれる質問を挙げる"
+
+[[roles]]
+name = "planner"
+label = "実行計画担当"
+task = "小さく試す計画、効果の測り方、やめる条件を作る"
+ask = "改善や試行の進め方と、効果の測り方を決めたい"
+skill = "plan"
+does = "実行計画 (PLN) の作成と修正、トレース表の更新"
+never = "測り方のない目標を書かない。承認が要る作業を承認済みとして書かない。"
+edits = "PLN、トレース表、台帳"
+
+[[stages]]
+key = "frame"
+label = "問題を整理する (状況、関係者、論点)"
+ask = "何が問題かを整理する"
+flow = ["framer"]
+makes = "SIT、ISS"
+[[stages]]
+key = "options"
+label = "選択肢を出して比べる"
+ask = "選択肢を出して比べる。続けるか止めるかの判断材料を作る"
+flow = ["strategist"]
+makes = "OPT"
+[[stages]]
+key = "propose"
+label = "説得の筋道と提案資料を作る"
+ask = "上司や関係部門に出す提案資料を作る"
+flow = ["writer"]
+makes = "ARG、DOC"
+[[stages]]
+key = "plan"
+label = "小さく試す計画を作る"
+ask = "改善や試行の計画を作る"
+flow = ["planner"]
+makes = "PLN"
+[[stages]]
+key = "all"
+label = "整理から提案資料まで通しで進める"
+ask = "整理から資料まで通しで進める"
+flow = ["framer", "strategist", "writer"]
+makes = "SIT、ISS、OPT、ARG、DOC"
+
+[[howto]]
+want = "社外の人 (外注先など) にも社内の道具を使えるようにしたい。上司と関係部門を説得したい"
+input = "`/solve standard frame <案件名> <いまの状況と、実現したいこと>` のあと `options`、`propose`"
+[[howto]]
+want = "いまのプロジェクトの進め方がおかしい気がする。止めるか、別の方法を提案したい"
+input = "`/solve standard frame <案件名> <気になっている点>` のあと `options`"
+[[howto]]
+want = "業務改善のテーマを決めて進めたい"
+input = "`/solve frame <案件名> <困っていること>` のあと `plan`"
+[[howto]]
+want = "自分の案の穴を突いてほしい"
+input = "`/solve option-reviewer <ファイル、または案の説明> に反論して`"
+[[howto]]
+want = "作った資料が通るか、上司の立場で読んでほしい"
+input = "`/solve audience-reviewer <ファイル> を <相手> の立場で読んで`"
+[[howto]]
+want = "急ぎで、口頭で話す要点だけほしい"
+input = "`/solve writer <案件名、または状況の説明> の 30 秒の説明と想定問答を作って`"
+
+[[settings]]
+key = "audience"
+value = '""'
+comment = "いつも決める相手と関係部門。例: 部長、情報システム部門、法務、調達"
+[[settings]]
+key = "doc_format"
+value = '"1 枚 + 補足"'
+comment = "提案資料の形。社内の様式があれば library に登録する"
+
+[support]
+librarian = true
